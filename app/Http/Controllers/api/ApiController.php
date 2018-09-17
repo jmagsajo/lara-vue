@@ -5,15 +5,14 @@ namespace App\Http\Controllers\api;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use GuzzleHttp\Client;
-use App\Models\api\OauthClients;
+use App\Models\api\OauthClients as oauthModel;
 
 class ApiController extends Controller
 {
     public function getToken(Request $request){
 
-    	$client_secret = OauthClients::select('secret')->where('id', 2)->first();
-    	
-		$http = new Client;
+    	$client_secret = oauthModel::select('secret')->where('id', 2)->first();
+    	$http = new Client;
 		
 	    $response = $http->post(url('oauth/token'), [
 	        'form_params' => [
