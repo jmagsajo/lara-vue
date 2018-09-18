@@ -14,4 +14,6 @@
 
 <p>5. copy .env.example to .env and config your db credentials and so on.</p>
 
+<p>6. run php artisan key:generate</p>
+
 <p>note: laravel passport is not working on php artisan serve you must use a virtual host.</p>
