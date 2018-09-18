@@ -16,4 +16,6 @@
 
 <p>6. run php artisan key:generate</p>
 
+<p>7. npm run dev</p>
+
 <p>note: laravel passport is not working on php artisan serve you must use a virtual host.</p>
