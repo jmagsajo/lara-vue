@@ -1,18 +1,18 @@
 <template lang="html">
 
-    <div class="modal fade" id="programUpdateModal">
+    <div class="modal fade" id="userUpdateModal">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
 
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title">Update Program</h4>
+                    <h4 class="modal-title">Update User</h4>
                 </div>
 
-                <form v-on:submit.prevent="submit( program.id )" class="form-horizontal">
+                <form v-on:submit.prevent="submit( user.id )" class="form-horizontal">
                     <div class="modal-body">
 
-                        <div class="alert alert-danger update-program-validation">
+                        <div class="alert alert-danger update-user-validation">
                             <ul>
                                 <li v-for="validation in validations">
                                     {{ validation }}
@@ -21,24 +21,42 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="program_name" class="col-sm-2 control-label">Program name</label>
+                            <label for="email_update" class="col-sm-2 control-label">email<span class="text-danger">*</span></label>
                             <div class="col-sm-10">
-                                <input type="text" class="form-control program_name" v-model="program.program_name" id="program_name" placeholder="Program name">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="description" class="col-sm-2 control-label">Description</label>
-                            <div class="col-sm-10">
-                                <textarea v-model="program.description" name="description" class="form-control description" id="description" rows="3" placeholder="Description"></textarea>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="thumbnail_url" class="col-sm-2 control-label">Thumbnail url</label>
-                            <div class="col-sm-10">
-                                <input type="text" v-model="program.thumbnail_url" class="form-control thumbnail_url" id="thumbnail_url" placeholder="Thumbnail url">
+                                <input type="text" class="form-control email" v-model="user.email" id="email_update" placeholder="email">
                             </div>
                         </div>
 
+                        <div class="form-group">
+                            <label for="first_name_update" class="col-sm-2 control-label">first name<span class="text-danger">*</span></label>
+                            <div class="col-sm-10">
+                                 <input type="text" class="form-control first_name" v-model="user.first_name" id="first_name_update" placeholder="first name">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="last_name_update" class="col-sm-2 control-label">last name<span class="text-danger">*</span></label>
+                            <div class="col-sm-10">
+                                  <input type="text" class="form-control last_name" v-model="user.last_name" id="last_name_update" placeholder="last name">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="address_update" class="col-sm-2 control-label">address<span class="text-danger">*</span></label>
+                            <div class="col-sm-10">
+                                <textarea v-model="user.address" name="address" class="form-control address" id="address_update" rows="3" placeholder="address"></textarea>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="postcode_update" class="col-sm-2 control-label">postcode<span class="text-danger">*</span></label>
+                            <div class="col-sm-10">
+                                  <input type="text" class="form-control postcode" v-model="user.postcode" id="postcode_update" placeholder="postcode">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone_number_update" class="col-sm-2 control-label">phone_number<span class="text-danger">*</span></label>
+                            <div class="col-sm-10">
+                                  <input type="text" class="form-control phone_number" v-model="user.phone_number" id="phone_number_update" placeholder="phone_number">
+                            </div>
+                        </div>
 
                     </div>
 
@@ -61,49 +79,76 @@
     export default {
         data: function(){
             return {
-                program:{
+                token:'',
+                token_type: '',
+                user:{
                     id : '',
-                    program_name : '',
-                    description : '',
-                    thumbnail_url : '',
+                    email : '',
+                    first_name : '',
+                    last_name : '',
+                    address : '',
+                    postcode : '',
+                    phone_number : '',
                 },
                 validations:[]
             }
         },
         created: function(){
 
-            bus.$on('update-program', (program) => {
-                this.fetchProgram( program )
+            bus.$on('update-user', (user) => {
+                this.fetchUser( user )
             });
 
         },
         methods:{
-            fetchProgram : function( data ){
+            fetchToken : function(){
+                let that = this;
+                return this.$http.get('/api/getToken').then(response => response.json())
+                .then(json => {
+                    that.token = json.access_token;
+                    that.token_type = json.token_type;
+                });
+            },
+            fetchUser : function( data ){
 
-                this.program.id = data.id;
-                this.program.program_name = data.program_name;
-                this.program.description = data.description;
-                this.program.thumbnail_url = data.thumbnail_url;
+                this.user.id = data.id;
+                this.user.email = data.email;
+                this.user.first_name = data.first_name;
+                this.user.last_name = data.last_name;
+                this.user.address = data.address;
+                this.user.postcode = data.postcode;
+                this.user.phone_number = data.phone_number;
 
             },
             submit: function( id ){
+                let that = this;
 
-                this.$http.post('program/update/'+id, this.program).then(function( response ){
+                that.fetchToken().then(function(){
+                    that.$http.post('api/user/update/'+id, that.user, {
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                            'Authorization': that.token_type + ': ' + that.token
+                        }
+                    }).then(response => response.json())
+                    .then(json => {
 
-                    var checker = response.body.validator;
+                        var checker = json.validation;
 
-                    if( $.trim( checker ) == "" ){
-                        bus.$emit('program-updated', response);
-                        $('#programUpdateModal').modal('hide');
+                        if( checker == undefined ){
 
-                    }else{
-                        this.validations = checker;
-                        $('.update-program-validation').show();
-                        setTimeout(function(){
-                            $('.update-program-validation').fadeOut();
-                        },5000);
-                    }
+                            bus.$emit('user-updated', json.data);
+                            $('#userUpdateModal').modal('hide');
 
+                        }else{
+
+                            that.validations = checker;
+                            $('.update-user-validation').show();
+                            setTimeout(function(){
+                                $('.update-user-validation').fadeOut();
+                            },5000);
+                        }
+
+                    });
                 });
 
             }
@@ -112,7 +157,7 @@
 </script>
 
 <style>
-    .update-program-validation{
+    .update-user-validation{
         display:none;
     }
 </style>

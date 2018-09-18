@@ -1,6 +1,6 @@
 <template>
-    <nav aria-label="Page navigation">
-        <ul class="pagination">
+    <div class="box-footer clearfix">
+        <ul class="pagination pagination-sm no-margin pull-right">
             <li v-if="prev">
                 <a aria-label="Previous" v-on:click="prevPage( prev )">
                     <span aria-hidden="true">&laquo;</span>
@@ -25,7 +25,7 @@
                 </a>
             </li>
         </ul>
-    </nav>
+    </div>
 </template>
 
 <script>
@@ -42,7 +42,7 @@
         created : function(){
 
             bus.$on('pagination', (data) =>{
-
+                // console.log(data);
                 this.pages = data.pages;
                 this.active = data.active;
                 this.next = data.next;
@@ -52,48 +52,82 @@
 
         },
         methods: {
+            fetchToken : function(){
+                let that = this;
+                return this.$http.get('/api/getToken').then(response => response.json())
+                .then(json => {
+                    that.token = json.access_token;
+                    that.token_type = json.token_type;
+                });
+            },
             nextPage : function( page ){
+                let that = this;
 
-                this.$http.get('program/getPrograms/'+page).then(function( response ){
+                that.fetchToken().then(function(){
+                    that.$http.get('api/user/listByPage/'+page, {
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                            'Authorization': that.token_type + ': ' + that.token
+                        }
+                    }).then(response => response.json())
+                    .then(json => {
 
-                    var pagination = response.body.pagination;
-                    this.active = pagination.active;
-                    this.pages = pagination.pages;
-                    this.next = pagination.next;
-                    this.prev = pagination.prev;
+                        var pagination = json.pagination;
+                        that.active = pagination.active;
+                        that.pages = pagination.pages;
+                        that.next = pagination.next;
+                        that.prev = pagination.prev;
 
-                    bus.$emit('program-pagination', response.body.programs);
+                        bus.$emit('user-pagination', json.data);
 
+                    });
                 });
 
             },
             prevPage : function( page ){
+                let that = this;
 
-                this.$http.get('program/getPrograms/'+page).then(function( response ){
+                that.fetchToken().then(function(){
+                    that.$http.get('api/user/listByPage/'+page, {
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                            'Authorization': that.token_type + ': ' + that.token
+                        }
+                    }).then(response => response.json())
+                    .then(json => {
 
-                    var pagination = response.body.pagination;
-                    this.active = pagination.active;
-                    this.pages = pagination.pages;
-                    this.next = pagination.next;
-                    this.prev = pagination.prev;
+                        var pagination = json.pagination;
+                        that.active = pagination.active;
+                        that.pages = pagination.pages;
+                        that.next = pagination.next;
+                        that.prev = pagination.prev;
 
-                    bus.$emit('program-pagination', response.body.programs);
+                        bus.$emit('user-pagination', json.data);
 
+                    });
                 });
 
             },
             clickPage : function( page ){
+                let that = this;
+                that.fetchToken().then(function(){
+                    that.$http.get('api/user/listByPage/'+page, {
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                            'Authorization': that.token_type + ': ' + that.token
+                        }
+                    }).then(response => response.json())
+                    .then(json => {
 
-                this.$http.get('program/getPrograms/'+page).then(function( response ){
+                        var pagination = json.pagination;
+                        that.active = pagination.active;
+                        that.pages = pagination.pages;
+                        that.next = pagination.next;
+                        that.prev = pagination.prev;
 
-                    var pagination = response.body.pagination;
-                    this.active = pagination.active;
-                    this.pages = pagination.pages;
-                    this.next = pagination.next;
-                    this.prev = pagination.prev;
+                        bus.$emit('user-pagination', json.data);
 
-                    bus.$emit('program-pagination', response.body.programs);
-
+                    });
                 });
 
             }

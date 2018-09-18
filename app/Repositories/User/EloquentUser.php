@@ -19,7 +19,7 @@ class EloquentUser implements UserInterface
 
 	public function getById($id)
 	{
-		return $this->model->findById($id);
+		return $this->model->find($id);
 	}
 
 	public function create(array $attributes)
@@ -36,7 +36,32 @@ class EloquentUser implements UserInterface
 
 	public function delete($id)
 	{
-		$this->getById($id)->delete();
-		return true;
+		$data = $this->getById($id)->delete();
+		return "deleted!";
+	}
+
+	public function listByPage($page)
+	{
+		$limit = 10;
+        $offset = ($page - 1) * 10;
+
+        $data =  $this->model->offset( $offset )
+            ->limit( $limit )
+            ->get();
+
+        $data_count = $this->model->count();
+        $total_pages = ceil($data_count/$limit);
+
+        $pagination = [
+            'active' => $page,
+            'pages' => $total_pages,
+            'prev' => ( $page <= 1 ? false : ($page - 1) ),
+            'next' => ( $total_pages == $page ? false : ($page + 1) ),
+        ];
+
+        return [
+            'data' => $data,
+            'pagination' => $pagination
+        ];
 	}
 }

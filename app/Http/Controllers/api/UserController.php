@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use App\Http\Requests;
 use App\Repositories\User\UserInterface;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -20,7 +23,14 @@ class UserController extends Controller
      */
     public function index()
     {
-       return $this->user->getAll();
+        $users = $this->user->getAll();
+        if($users){
+            return response()
+            ->json(['success' => 1, 'data' => $users]);
+        }else{
+            return response()
+            ->json(['success' => 0, 'data' =>[] ]);
+        }
     }
 
     /**
@@ -40,8 +50,42 @@ class UserController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
-    {
-        //
+    {   
+
+        $validation = Validator::make($request->all(),[ 
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'address' => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:users',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:6|confirmed',
+            'address' => 'required|string|max:255',
+            'postcode' => 'required|string|max:255',
+            'phone_number' => 'required|string|max:255',
+        ]);
+
+        if($validation->fails()){
+
+            return response()
+            ->json(['success' => 1, 'validation' => $validation->errors() ]);
+
+        } else{
+
+            $array =  [
+                'email' => $request->email,
+                'username' => $request->username,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'address' => $request->address,
+                'postcode' => $request->postcode,
+                'phone_number' => $request->phone_number,
+                'password' => Hash::make($request->password),
+            ];
+
+            $users = $this->user->create($array);
+            return response()
+            ->json(['success' => 1, 'data' => $users]);
+        }
     }
 
     /**
@@ -75,7 +119,43 @@ class UserController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $validation = Validator::make($request->all(),[ 
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'address' => 'required|string|max:255',
+            // 'email' => 'required|string|email|max:255|unique:users',
+            'email' => [
+                'required',
+                'email',
+                'string',
+                'max:255',
+                Rule::unique('users')->ignore($id)
+            ],
+            'address' => 'required|string|max:255',
+            'postcode' => 'required|string|max:255',
+            'phone_number' => 'required|string|max:255',
+        ]);
+
+        if($validation->fails()){
+
+            return response()
+            ->json(['success' => 1, 'validation' => $validation->errors() ]);
+
+        } else{
+
+            $array =  [
+                'email' => $request->email,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'address' => $request->address,
+                'postcode' => $request->postcode,
+                'phone_number' => $request->phone_number
+            ];
+
+            $users = $this->user->update($id, $array);
+            return response()
+            ->json(['success' => 1, 'data' => $users]);
+        }
     }
 
     /**
@@ -86,6 +166,12 @@ class UserController extends Controller
      */
     public function destroy($id)
     {
-        //
+        return $this->user->delete($id);
+    }
+
+    public function listByPage($page){
+
+        return $this->user->listByPage($page);
+
     }
 }

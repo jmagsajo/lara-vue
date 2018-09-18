@@ -1,34 +1,43 @@
 <template lang="html">
-    <table class="table table-striped table-bordered table-hover">
-        <thead>
-        <tr>
-            <th>Program name</th>
-            <th>Slug</th>
-            <th>Description</th>
-            <th>Thumbnail url</th>
-            <th>Action</th>
-        </tr>
-        </thead>
-        <tbody id="program-index">
-            <tr v-for="program in programs">
-                <td width="100">{{ program.program_name }}</td>
-                <td>{{ program.slug }}</td>
-                <td width="500">{{ program.description }}</td>
-                <td>
-                    <img v-bind:style="styleObject" v-bind:src="program.thumbnail_url" v-bind:alt="program.thumbnail_url">
-                </td>
-                <td>
-                    <button type="button" class="btn btn-primary" v-on:click="updateProgram( program )" >
-                        <span class="fa fa-pencil-square"></span>
-                    </button>
-                    <button type="button" class="btn btn-danger" v-on:click="deleteProgram( program )">
-                        <span class="fa fa-trash"></span>
-                    </button>
-                </td>
-
-            </tr>
-        </tbody>
-    </table>
+    <!-- /.box-header -->
+    <div class="box-body">
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>email</th>
+                        <th>username</th>
+                        <th>first name</th>
+                        <th>last name</th>
+                        <th>address</th>
+                        <th>post code</th>
+                        <th>phone number</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="user-index">
+                    <tr v-for="user in users">
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.first_name }}</td>
+                        <td>{{ user.last_name }}</td>
+                        <td>{{ user.address }}</td>
+                        <td>{{ user.postcode }}</td>
+                        <td>{{ user.phone_number }}</td>
+                        <td>
+                           <button type="button" class="btn btn-primary" v-on:click="updateUser( user )" >
+                               <span class="fa fa-pencil-square"></span>
+                           </button>
+                           <button type="button" class="btn btn-danger" v-on:click="deleteUser( user )">
+                               <span class="fa fa-trash"></span>
+                           </button>
+                        </td>
+                        </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <!-- /.box-body -->
 </template>
 
 <script>
@@ -36,8 +45,9 @@
     export default {
         data: function(){
             return {
-                programs:[],
+                users:[],
                 token:'',
+                token_type: '',
                 styleObject: {
                     width:'50px'
                 }
@@ -46,71 +56,81 @@
         methods: {
             fetchToken : function(){
                 let that = this;
-                return $.get(
-                    '/api/getToken',
-                    function(data){
-                        that.token = data.access_token;
-                    }
-                );
+                return this.$http.get('/api/getToken').then(response => response.json())
+                .then(json => {
+                    that.token = json.access_token;
+                    that.token_type = json.token_type;
+                });
             },
             fetchUsers: function(){
                 let that = this;
-                that.fetchToken().then(function(){
-                    that.http.get('api/users',{
+                this.fetchToken().then(function(){
+                    this.$http.get('api/user/listByPage/1',{
                         headers: {
-                            Authorization: 'Basic ' + that.token
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                            'Authorization': that.token_type + ': ' + that.token
                         }
-                    }).then(function(response) {
-                        console.log(response);
+                    }).then(response => response.json())
+                    .then(json => {
+                        bus.$emit( 'pagination', json.pagination );
+                        that.users = json.data;
                     });
                 });
             },
-            deleteProgram : function( program ){
+            deleteUser : function( user ){
 
                 var r = confirm('are you sure you want to delete this program?');
                 if( r == true ) {
-                    this.$emit( 'delete-program', program );
+                    this.$emit( 'delete-user', user );
                 }
             },
-            updateProgram : function( program ){
-                bus.$emit( 'update-program', program );
-                $('#programUpdateModal').modal('show');
+            updateUser : function( user ){
+                bus.$emit( 'update-user', user );
+                $('#userUpdateModal').modal('show');
             }
         },
         created: function () {
-
-            this.fetchPrograms();
+            let that = this;
+            that.fetchUsers();
 
             //CREATE
-            bus.$on('program-created',( data ) =>{
-                this.programs.push( data.body.program );
+            bus.$on('user-created',( data ) =>{
+                that.users.push( data.data );
             });
 
             //DELETE
-            this.$on('delete-program', (program) => {
+            that.$on('delete-user', (user) => {
+                that.fetchToken().then(function(){
+                    that.$http.get('api/user/delete/'+ user.id, {
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                            'Authorization': that.token_type + ': ' + that.token
+                        }
+                    }).then( response => {
 
-                this.$http.get('program/delete/'+ program.id ).then( function(response) {
+                        var index = this.users.indexOf(user);
+                        that.users.splice(index, 1);
 
-                    var index = this.programs.indexOf(program);
-                    this.programs.splice(index, 1);
-
+                    });
                 });
 
             });
 
             //PAGINATION
-            bus.$on('program-pagination',( data ) =>{
-                this.programs = data;
+            bus.$on('user-pagination',( data ) =>{
+                that.users = data;
             });
 
             //UPDATE
-            bus.$on('program-updated',( data ) =>{
-                var program = data.body.program;
-                var index = this.programs.findIndex((obj => obj.id == program.id));
-                this.programs[index].program_name = program.program_name;
-                this.programs[index].slug = program.slug;
-                this.programs[index].description = program.description;
-                this.programs[index].thumbnail_url = program.thumbnail_url;
+            bus.$on('user-updated',( data ) =>{
+                var user = data;
+                var index = this.users.findIndex((obj => obj.id == user.id));
+                this.users[index].email = user.email;
+                this.users[index].first_name = program.first_name;
+                this.users[index].last_name = program.last_name;
+                this.users[index].address = program.address;
+                this.users[index].postcode = program.postcode;
+                this.users[index].phone_number = program.phone_number;
             });
         }
     }

@@ -12,4 +12,6 @@
 
 <p>4. php artisan passport:install</p>
 
-<p>copy .env.example to .env and config your db credentials and so on.</p>
+<p>5. copy .env.example to .env and config your db credentials and so on.</p>
+
+<p>note: laravel passport is not working on php artisan serve you must use a virtual host.</p>

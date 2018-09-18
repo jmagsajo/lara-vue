@@ -5,23 +5,23 @@
         <div class="col-sm-12">
             <div class="ibox float-e-margins">
                 <div class="ibox-title clearfix" v-bind:style="styleObject">
-                    <h5>Users</h5>
                     <div class="btn-group pull-right">
-                        <a class="btn btn-success" id="user-create">Create User</a>
+                        <a class="btn btn-success" id="user-create" v-on:click="openModal()">Create User</a>
                     </div>
                 </div>
-                <div class="ibox-content">
-                    <div class="table-responsive">
 
-                        <user-index></user-index>
-
-                    </div>
+                <div class="box">
+                    <user-index></user-index>
+                    
+                    <pagination></pagination>
                     
                 </div>
+
             </div>
         </div>
 
-       
+        <user-create></user-create>
+        <user-update></user-update>
 
     </div>
 
@@ -30,18 +30,27 @@
 <script>
     import {bus} from '../../app';
     import index from './Index.vue';
+    import create from './Create.vue';
+    import update from './Update.vue';
+    import pagination from './Pagination.vue';
 
     export default {
         data: function(){
             return {
                 styleObject: {
-                    "background-color": "#2f4050",
-                    "color":"#ffffff"
                 }
             }
         },
+        methods: {
+            openModal : function(){
+                $('#userCreateModal').modal();
+            }
+        },
         components : {
-            'user-index' : index
+            'user-index' : index,
+            'user-create' : create,
+            'user-update' : update,
+            'pagination' : pagination,
         }
     }
 </script>
