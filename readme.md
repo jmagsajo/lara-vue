@@ -8,11 +8,11 @@
 
 <p>2. npm install</p>
 
-<p>3. php artisan migrate</p>
+<p>3. php artisan passport:install</p>
 
-<p>4. php artisan passport:install</p>
+<p>4. copy .env.example to .env and config your db credentials and so on.</p>
 
-<p>5. copy .env.example to .env and config your db credentials and so on.</p>
+<p>5. php artisan migrate</p>
 
 <p>6. run php artisan key:generate</p>
 
