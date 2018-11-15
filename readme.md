@@ -14,7 +14,7 @@
 
 <p>5. php artisan passport:install</p>
 
-<p>6. run php artisan key:generate</p>
+<p>6. php artisan key:generate</p>
 
 <p>7. npm run dev</p>
 
