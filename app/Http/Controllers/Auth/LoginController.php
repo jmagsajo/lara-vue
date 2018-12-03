@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
+use App\Libraries\PassportAPI;
 
 class LoginController extends Controller
 {
@@ -48,5 +49,24 @@ class LoginController extends Controller
             $field => $request->get($this->username()),
             'password' => $request->password,
         ];
+    }
+
+    protected function authenticated(Request $request, $user)
+    {   
+        //put your thing in here
+        $tokenRequest = New PassportAPI;
+
+        $response = $tokenRequest->post( url('oauth/token'),  [
+                'grant_type' => 'password',
+                'client_id' => '2',
+                'client_secret' => 'TU40PNtPUfiNFIg6BgeuQPegBp1HAN5qqphgAzLQ',
+                'username' => $user->email,
+                'password' => $request->password,
+                'scope' => ''
+        ]);
+
+        dd($response);
+
+       return redirect()->intended($this->redirectPath());
     }
 }
