@@ -65,7 +65,10 @@ class LoginController extends Controller
                 'scope' => ''
         ]);
 
-        dd($response);
+        $request->session()->put('token_type', $response->token_type);
+        $request->session()->put('token_expires_in', $response->expires_in);
+        $request->session()->put('access_token', $response->access_token);
+        $request->session()->put('refresh_token', $response->refresh_token);
 
        return redirect()->intended($this->redirectPath());
     }
